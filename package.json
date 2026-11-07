@@ -1,0 +1,11 @@
+{
+  "name": "neo2-flight-check",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local flying conditions for the DJI Neo 2 drone",
+  "scripts": {
+    "test": "node --test",
+    "start": "npx --yes serve -l 8080 ."
+  }
+}
