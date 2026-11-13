@@ -1,10 +1,11 @@
-// Flying-condition rules for the DJI Neo 2.
+// Flying-condition rules, scaled to the selected aircraft's published limits.
 // Pure functions only (no DOM, no network) so they can be unit-tested.
 
+// Fallback profile (Neo 2). Real profiles live in drones.js.
 export const NEO2 = {
-  name: 'DJI Neo 2',
-  maxWindMs: 10.7,          // DJI spec: max wind speed resistance 10.7 m/s (Level 5)
-  minTempC: -10,            // DJI spec: operating temperature -10 to 40 °C
+  name: 'Neo 2',
+  maxWindMs: 10.7,
+  minTempC: -10,
   maxTempC: 40,
   maxTakeoffAltitudeM: 2000,
 };
@@ -53,7 +54,7 @@ export function evaluate(w, ctx = {}, spec = NEO2) {
   if (has(w.windMs)) {
     const r = w.windMs / spec.maxWindMs;
     add('wind', 'Wind', r >= 0.8 ? NOGO : r >= 0.5 ? CAUTION : GO,
-      r >= 0.8 ? 'Too close to the Neo 2’s 10.7 m/s limit'
+      r >= 0.8 ? `Too close to the ${spec.name}’s wind limit`
         : r >= 0.5 ? 'Breezy. Expect drift, and keep it close'
           : 'Light wind');
   }
@@ -83,7 +84,7 @@ export function evaluate(w, ctx = {}, spec = NEO2) {
     const prob = has(w.precipProb) ? w.precipProb : 0;
     add('precip', 'Precipitation',
       raining ? NOGO : prob >= 40 ? CAUTION : GO,
-      raining ? 'Rain or snow. The Neo 2 isn’t waterproof'
+      raining ? 'Rain or snow. Moisture can damage the motors and electronics'
         : prob >= 40 ? 'Chance of rain. Watch the sky'
           : 'Dry');
   }
@@ -106,9 +107,9 @@ export function evaluate(w, ctx = {}, spec = NEO2) {
   if (has(w.tempC)) {
     const t = w.tempC;
     let level = GO, detail = 'Within operating range';
-    if (t < spec.minTempC || t > spec.maxTempC) { level = NOGO; detail = 'Outside the −10 to 40 °C operating range'; }
-    else if (t < 5) { level = CAUTION; detail = 'Cold. Battery life is shorter, so warm batteries first'; }
-    else if (t > 35) { level = CAUTION; detail = 'Hot. Watch for overheating'; }
+    if (t < spec.minTempC || t > spec.maxTempC) { level = NOGO; detail = `Outside the ${spec.name}’s operating range`; }
+    else if (t < Math.max(5, spec.minTempC + 5)) { level = CAUTION; detail = 'Cold. Battery life is shorter, so warm batteries first'; }
+    else if (t > spec.maxTempC - 5) { level = CAUTION; detail = 'Hot. Watch for overheating'; }
     add('temp', 'Temperature', level, detail);
   }
 
@@ -139,7 +140,7 @@ export function evaluate(w, ctx = {}, spec = NEO2) {
   // Takeoff altitude
   if (has(ctx.elevationM) && ctx.elevationM > spec.maxTakeoffAltitudeM) {
     add('elevation', 'Takeoff altitude', NOGO,
-      'Above the Neo 2’s 2000 m max takeoff altitude');
+      `Above the ${spec.name}’s ${spec.maxTakeoffAltitudeM} m max takeoff altitude`);
   }
 
   return { level: worst(checks.map((c) => c.level)), checks };

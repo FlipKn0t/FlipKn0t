@@ -1,11 +1,21 @@
 {
-  "name": "neo2-flight-check",
+  "name": "flight-check",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Local flying conditions for the DJI Neo 2 drone",
+  "description": "Local drone flying conditions, checked against your aircraft's limits",
   "scripts": {
     "test": "node --test",
-    "start": "npx --yes serve -l 8080 ."
+    "start": "npx --yes serve -l 8080 www",
+    "ios": "npx cap sync ios && npx cap open ios",
+    "sync": "npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.6.2",
+    "@capacitor/geolocation": "8.2.4",
+    "@capacitor/ios": "8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2"
   }
 }

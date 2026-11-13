@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Flight Check</title>
+  <meta name="description" content="Local flying conditions for your drone: wind, gusts, rain, visibility, temperature and more, checked against your aircraft's limits.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark light">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Flight Check">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="loc-btn" id="locBtn" aria-label="Change location">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      <span id="locName">Locating…</span>
+    </button>
+    <button class="drone-chip" id="droneBtn" aria-label="Change drone">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="5.5" r="3"/><circle cx="18.5" cy="5.5" r="3"/><circle cx="5.5" cy="18.5" r="3"/><circle cx="18.5" cy="18.5" r="3"/><path d="M8 8l2.5 2.5M16 8l-2.5 2.5M8 16l2.5-2.5M16 16l-2.5-2.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/></svg>
+      <span id="droneName">Select drone</span>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero" id="hero" data-level="loading" aria-live="polite">
+      <div class="status-strip"><span class="status-dot"></span><span id="statusTag">Checking</span></div>
+      <h1 class="hero-title" id="heroTitle">Checking conditions…</h1>
+      <p class="hero-sub" id="heroSub"></p>
+
+      <div class="meter" id="meter" hidden>
+        <div class="meter-head">
+          <span class="label">Wind vs. aircraft limit</span>
+          <span class="meter-limit" id="meterLimit"></span>
+        </div>
+        <div class="meter-track">
+          <div class="meter-zones"><i class="z-go"></i><i class="z-caution"></i><i class="z-nogo"></i></div>
+          <div class="meter-fill" id="meterFill"></div>
+          <div class="meter-gust" id="meterGust"></div>
+          <div class="meter-limit-line" id="meterLimitLine"></div>
+        </div>
+        <div class="readouts">
+          <div><span class="label">Wind</span><span class="num" id="roWind">–</span></div>
+          <div><span class="label">Gusts</span><span class="num" id="roGust">–</span></div>
+          <div><span class="label">At 80 m</span><span class="num" id="roAloft">–</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tiles" id="tiles" aria-label="Conditions"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Next 24 hours</h2>
+        <span class="hint">Tap an hour</span>
+      </div>
+      <p class="window" id="bestWindow"></p>
+      <div class="timeline" id="timeline" role="list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2 id="checksTitle">Pre-flight check</h2></div>
+      <ul class="checks" id="checks"></ul>
+    </section>
+
+    <section class="panel" id="droneCard"></section>
+
+    <footer class="footer">
+      <p>Weather from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. Kp index from
+        <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA SWPC</a>.</p>
+      <p>This is guidance only. Check airspace restrictions and local rules, and use your own judgment before you fly.</p>
+      <p class="legal">Flight Check is an independent app. It is not affiliated with, endorsed by, or sponsored by DJI.
+        DJI and the product names shown are trademarks of their respective owners and are used only to identify aircraft.</p>
+      <p id="updated"></p>
+    </footer>
+  </main>
+
+  <!-- Drone picker -->
+  <dialog id="dronePicker" class="sheet">
+    <form method="dialog" class="sheet-inner">
+      <div class="sheet-head">
+        <h2 tabindex="-1" autofocus>Your aircraft</h2>
+        <button value="close" class="text-btn" aria-label="Close">Done</button>
+      </div>
+      <p class="sheet-sub">Limits and warnings follow the aircraft you pick.</p>
+      <div id="droneList"></div>
+      <div class="group">
+        <h3>Other</h3>
+        <button type="button" class="drone-row" id="customRow" data-id="custom">
+          <span class="dr-name">Custom drone</span>
+          <span class="dr-meta">Enter your own limits</span>
+          <span class="dr-check" aria-hidden="true"></span>
+        </button>
+        <div class="custom-form" id="customForm" hidden>
+          <label>Name <input id="cName" type="text" maxlength="40" placeholder="My drone"></label>
+          <label>Max wind (m/s) <input id="cWind" type="number" inputmode="decimal" step="0.1" min="1" max="40"></label>
+          <label>Min temp (°C) <input id="cMinT" type="number" inputmode="numeric" step="1" min="-40" max="30"></label>
+          <label>Max temp (°C) <input id="cMaxT" type="number" inputmode="numeric" step="1" min="10" max="60"></label>
+          <label>Max takeoff altitude (m) <input id="cAlt" type="number" inputmode="numeric" step="100" min="100" max="9000"></label>
+          <label>Weight (g) <input id="cWeight" type="number" inputmode="decimal" step="1" min="10" max="25000"></label>
+          <button type="button" class="primary" id="customSave">Use these limits</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings -->
+  <dialog id="settings" class="sheet">
+    <form method="dialog" class="sheet-inner">
+      <div class="sheet-head">
+        <h2 tabindex="-1" autofocus>Location &amp; units</h2>
+        <button value="close" class="text-btn" aria-label="Close">Done</button>
+      </div>
+      <button type="button" id="gpsBtn" class="primary">Use my current location</button>
+      <div class="search-row">
+        <input id="searchInput" type="search" placeholder="Search a city or postcode" autocomplete="off" aria-label="Search for a place">
+        <button type="button" id="searchBtn" class="secondary">Search</button>
+      </div>
+      <ul id="searchResults" class="results"></ul>
+      <div class="seg-group">
+        <span class="label">Wind</span>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="wind" value="mph"><span>mph</span></label>
+          <label><input type="radio" name="wind" value="kmh"><span>km/h</span></label>
+          <label><input type="radio" name="wind" value="ms"><span>m/s</span></label>
+          <label><input type="radio" name="wind" value="kn"><span>kn</span></label>
+        </div>
+      </div>
+      <div class="seg-group">
+        <span class="label">Temperature</span>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="temp" value="F"><span>°F</span></label>
+          <label><input type="radio" name="temp" value="C"><span>°C</span></label>
+        </div>
+      </div>
+      <div class="seg-group">
+        <span class="label">Distance</span>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="dist" value="mi"><span>mi</span></label>
+          <label><input type="radio" name="dist" value="km"><span>km</span></label>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

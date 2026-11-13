@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   evaluate, GO, CAUTION, NOGO, currentConditions, currentHourIndex, parseKp,
-} from '../conditions.js';
+} from '../www/conditions.js';
 
 const calm = {
   windMs: 2, gustMs: 3, wind80Ms: 4, tempC: 18, dewPointC: 8, precipMm: 0,

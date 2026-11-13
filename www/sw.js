@@ -1,6 +1,6 @@
 // App-shell cache. Weather data always goes to the network (it must be fresh).
-const CACHE = 'neo2-flight-check-v1';
-const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'conditions.js', 'manifest.webmanifest', 'icon.svg'];
+const CACHE = 'flight-check-v2';
+const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'conditions.js', 'drones.js', 'icon-180.png', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

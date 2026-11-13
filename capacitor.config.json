@@ -1,0 +1,15 @@
+{
+  "appId": "com.flipkn0t.flightcheck",
+  "appName": "Flight Check",
+  "webDir": "www",
+  "backgroundColor": "#000000",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#000000"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
